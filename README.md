@@ -29,6 +29,8 @@ bundle exec rspec
 
 ## Configuration
 
+In development, copy `.env.example` to `.env` and fill it in; it is loaded automatically and git-ignored. In production, set these as environment variables on Render.
+
 | Variable | Purpose |
 | --- | --- |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM` | WhatsApp confirmation sent when a doctor books an appointment. Skipped if unset. |

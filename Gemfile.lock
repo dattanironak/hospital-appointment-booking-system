@@ -375,6 +375,7 @@ DEPENDENCIES
   brakeman
   bundler-audit
   debug
+  dotenv
   factory_bot_rails
   kamal
   pg (~> 1.1)
