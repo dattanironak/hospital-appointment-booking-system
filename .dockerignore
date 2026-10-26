@@ -37,3 +37,6 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Ignore precompiled assets; they are built inside the Docker image.
+/public/assets

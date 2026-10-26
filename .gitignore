@@ -24,3 +24,5 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Ignore precompiled assets; they are built inside the Docker image.
+/public/assets
