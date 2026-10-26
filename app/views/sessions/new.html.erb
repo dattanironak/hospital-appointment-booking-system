@@ -1,0 +1,59 @@
+<div class="auth">
+  <aside class="auth-hero">
+    <div class="brand brand-light">
+      <span class="brand-mark"><%= icon(:logo, size: 16) %></span>
+      <span class="brand-name"><%= clinic_name %></span>
+    </div>
+
+    <div class="auth-hero-copy">
+      <h1>Your practice, in one place.</h1>
+      <p>Manage your schedule, availability and patient appointments from a single dashboard.</p>
+
+      <ul class="auth-features">
+        <li><span><%= icon(:calendar) %></span>See every upcoming appointment at a glance</li>
+        <li><span><%= icon(:clock) %></span>Set weekly consulting hours in seconds</li>
+        <li><span><%= icon(:ban) %></span>Block leave days so patients can’t book them</li>
+      </ul>
+    </div>
+
+    <p class="auth-hero-foot"><%= icon(:shield, size: 16) %> Secure access for clinic staff only</p>
+  </aside>
+
+  <section class="auth-panel">
+    <div class="auth-form">
+      <div class="brand auth-mobile-brand">
+        <span class="brand-mark"><%= icon(:logo, size: 16) %></span>
+        <span class="brand-name"><%= clinic_name %></span>
+      </div>
+
+      <h2>Welcome back</h2>
+      <p class="muted">Sign in to the staff portal to continue.</p>
+
+      <% if alert %><div class="flash alert" role="alert"><%= icon(:ban) %><span><%= alert %></span></div><% end %>
+      <% if notice %><div class="flash notice" role="status"><%= icon(:check) %><span><%= notice %></span></div><% end %>
+
+      <%= form_with url: session_path, method: :post, local: true, class: "form" do |f| %>
+        <div class="field">
+          <%= f.label :email, "Email address" %>
+          <div class="input-icon">
+            <%= icon(:mail) %>
+            <%= f.email_field :email, value: params[:email], required: true, autofocus: true,
+                              autocomplete: "username", placeholder: "you@clinic.com" %>
+          </div>
+        </div>
+
+        <div class="field">
+          <%= f.label :password %>
+          <div class="input-icon">
+            <%= icon(:lock) %>
+            <%= f.password_field :password, required: true, autocomplete: "current-password", placeholder: "••••••••" %>
+          </div>
+        </div>
+
+        <%= f.button "Sign in", class: "btn btn-primary btn-block btn-lg" %>
+      <% end %>
+
+      <p class="auth-help">Trouble signing in? Contact your clinic administrator to reset your password.</p>
+    </div>
+  </section>
+</div>

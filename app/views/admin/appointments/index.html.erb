@@ -1,0 +1,39 @@
+<% content_for :title, "Appointments" %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>Appointments</h1>
+    <p class="muted"><%= pluralize(@appointments.size, "upcoming appointment") %></p>
+  </div>
+</div>
+
+<%= form_with url: admin_appointments_path, method: :get, local: true, class: "filter-bar" do |f| %>
+  <div class="field">
+    <%= f.label :doctor_id, "Doctor" %>
+    <%= f.select :doctor_id, @doctors.map { |d| [ d.name, d.id ] }, { include_blank: "All doctors", selected: params[:doctor_id] } %>
+  </div>
+  <%= f.button "Filter", class: "btn btn-secondary" %>
+<% end %>
+
+<div class="panel table-panel">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Time</th><th>Doctor</th><th>Patient</th><th>Phone</th></tr></thead>
+      <tbody>
+        <% @appointments.each do |appt| %>
+          <tr>
+            <td><strong><%= appt.appointment_date.strftime("%b %-d, %Y") %></strong><br><span class="muted"><%= appt.appointment_date.strftime("%A") %></span></td>
+            <td><%= clock(appt.start_time) %></td>
+            <td><%= doctor_name(appt.doctor) %></td>
+            <td><span class="cell-person"><span class="avatar avatar-soft"><%= initials(appt.patient_name) %></span><%= appt.patient_name %></span></td>
+            <td class="muted"><%= appt.patient_phone %></td>
+          </tr>
+        <% end %>
+        <% if @appointments.empty? %>
+          <tr><td colspan="5" class="empty-row">No upcoming appointments.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

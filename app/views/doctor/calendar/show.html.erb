@@ -1,0 +1,105 @@
+<% content_for :title, "Calendar" %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Calendar</p>
+    <h1><%= @month.strftime("%B %Y") %></h1>
+    <p class="muted"><%= pluralize(@booked_counts.select { |date, _| date.month == @month.month }.values.sum, "booked appointment") %> this month</p>
+  </div>
+  <div class="cal-nav">
+    <%= link_to doctor_calendar_path(month: @month.prev_month.strftime("%Y-%m")), class: "btn btn-secondary btn-sm", title: "Previous month" do %>&larr;<span class="sr-only">Previous month</span><% end %>
+    <%= link_to "Today", doctor_calendar_path, class: "btn btn-secondary btn-sm" %>
+    <%= link_to doctor_calendar_path(month: @month.next_month.strftime("%Y-%m")), class: "btn btn-secondary btn-sm", title: "Next month" do %>&rarr;<span class="sr-only">Next month</span><% end %>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <section class="panel">
+    <div class="cal-grid">
+      <% ApplicationHelper::WEEK_ORDER.each do |weekday| %>
+        <span class="cal-weekday"><%= Date::ABBR_DAYNAMES[weekday] %></span>
+      <% end %>
+
+      <% @days.each do |day| %>
+        <% count = @booked_counts.fetch(day, 0) %>
+        <% blocked = @blocked_dates.include?(day) %>
+        <% off = !@working_weekdays.include?(day.wday) %>
+        <%= link_to doctor_calendar_path(date: day.iso8601), class: [
+              "cal-day",
+              ("is-outside" if day.month != @month.month),
+              ("is-past" if day < Date.current),
+              ("is-today" if day == Date.current),
+              ("is-selected" if day == @selected_date),
+              ("is-off" if off || blocked),
+              ("has-bookings" if count.positive?)
+            ], aria: { label: "#{day.strftime('%A, %B %-d')}: #{pluralize(count, 'booking')}" } do %>
+          <span class="cal-day-num"><%= day.day %></span>
+          <% if count.positive? %>
+            <span class="cal-count"><strong><%= count %></strong><span class="cal-count-label"> booked</span></span>
+          <% elsif blocked %>
+            <span class="cal-tag">Blocked</span>
+          <% elsif off %>
+            <span class="cal-tag">Off</span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header class="panel-header">
+      <div>
+        <h2><%= day_heading(@selected_date) %></h2>
+        <p class="muted"><%= @selected_date.strftime("%A, %B %-d, %Y") %></p>
+      </div>
+    </header>
+
+    <div class="day-summary">
+      <div><span class="stat-value"><%= @day_appointments.size %></span><span class="stat-label">Booked</span></div>
+      <div><span class="stat-value"><%= @selected_date < Date.current ? "–" : @open_slots.size %></span><span class="stat-label">Open</span></div>
+    </div>
+
+    <% if @blocked_dates.include?(@selected_date) %>
+      <p class="hint day-note"><%= icon(:ban, size: 14) %> This whole day is blocked.</p>
+    <% end %>
+
+    <% if @day_appointments.empty? %>
+      <p class="muted empty-inline">No appointments booked.</p>
+    <% else %>
+      <ul class="appt-list">
+        <% @day_appointments.each do |appt| %>
+          <li class="appt">
+            <span class="appt-time">
+              <strong><%= clock(appt.start_time) %></strong>
+              <small><%= ((appt.end_time - appt.start_time) / 60).round %> min</small>
+            </span>
+            <span class="appt-patient">
+              <strong><%= appt.patient_name %></strong>
+              <a href="tel:<%= appt.patient_phone.gsub(/[^\d+]/, "") %>" class="appt-phone"><%= icon(:phone, size: 14) %><%= appt.patient_phone %></a>
+            </span>
+            <span class="appt-actions">
+              <%= link_to "Edit", edit_doctor_appointment_path(appt), class: "btn btn-secondary btn-sm" %>
+              <%= button_to doctor_appointment_path(appt), method: :delete, class: "btn btn-ghost-danger btn-sm",
+                            form: { class: "appt-action", onsubmit: "return confirm('Cancel #{j appt.patient_name}’s appointment on #{appt.appointment_date.strftime('%b %-d')} at #{clock(appt.start_time)}?')" } do %>
+                Cancel
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <% if @open_slots.any? %>
+      <h3 class="slot-heading">Open slots</h3>
+      <p class="hint slot-hint">Click a slot to book a patient into it.</p>
+      <div class="schedule-slots">
+        <% @open_slots.each do |slot| %>
+          <%= link_to new_doctor_appointment_path(date: @selected_date.iso8601, start_time: slot.start_time.strftime("%H:%M")),
+                      class: "chip chip-plain chip-link", title: "Book #{clock(slot.start_time)}" do %>
+            <%= icon(:plus, size: 12) %><%= clock(slot.start_time) %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+</div>

@@ -1,0 +1,25 @@
+<% content_for :title, "Add doctor" %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow"><%= link_to "Doctors", admin_doctors_path %></p>
+    <h1>Add doctor</h1>
+    <p class="muted">The doctor can sign in with this email and temporary password.</p>
+  </div>
+</div>
+
+<div class="card form-card">
+  <% if @doctor.errors.any? %>
+    <ul class="error-list">
+      <% @doctor.errors.full_messages.each { |m| %><li><%= m %></li><% } %>
+    </ul>
+  <% end %>
+
+  <%= form_with model: @doctor, url: admin_doctors_path, local: true, class: "form" do |f| %>
+    <div class="field"><%= f.label :name, "Full name" %><%= f.text_field :name, required: true, placeholder: "e.g. Priya Sharma" %></div>
+    <div class="field"><%= f.label :email %><%= f.email_field :email, required: true, placeholder: "doctor@clinic.com" %></div>
+    <div class="field"><%= f.label :specialty %><%= f.text_field :specialty, placeholder: "e.g. Cardiology" %></div>
+    <div class="field"><%= f.label :password, "Temporary password" %><%= f.password_field :password, required: true, autocomplete: "new-password" %></div>
+    <div><%= f.button "Create doctor", class: "btn btn-primary" %> <%= link_to "Cancel", admin_doctors_path, class: "btn btn-secondary" %></div>
+  <% end %>
+</div>

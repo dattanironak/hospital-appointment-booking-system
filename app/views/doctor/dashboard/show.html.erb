@@ -1,0 +1,197 @@
+<% content_for :title, "Dashboard" %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow"><%= Date.current.strftime("%A, %B %-d, %Y") %></p>
+    <h1><%= greeting %>, <%= doctor_name(current_user) %></h1>
+    <p class="muted">
+      <% if @today_count.zero? %>
+        You have no appointments today.
+      <% else %>
+        You have <strong><%= pluralize(@today_count, "appointment") %></strong> today.
+      <% end %>
+    </p>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat-icon tone-teal"><%= icon(:calendar) %></span>
+    <div><span class="stat-value"><%= @today_count %></span><span class="stat-label">Today</span></div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon tone-blue"><%= icon(:users) %></span>
+    <div><span class="stat-value"><%= @week_count %></span><span class="stat-label">Next 7 days</span></div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon tone-violet"><%= icon(:clock) %></span>
+    <div><span class="stat-value"><%= number_with_precision(@weekly_hours, precision: 1, strip_insignificant_zeros: true) %>h</span><span class="stat-label">Weekly hours</span></div>
+  </div>
+  <div class="stat">
+    <span class="stat-icon tone-amber"><%= icon(:ban) %></span>
+    <div><span class="stat-value"><%= @blocked_slots.size %></span><span class="stat-label">Upcoming blocks</span></div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <section class="panel">
+    <header class="panel-header">
+      <div>
+        <h2>Upcoming appointments</h2>
+        <p class="muted"><%= pluralize(@appointments.size, "confirmed booking") %></p>
+      </div>
+    </header>
+
+    <% if @appointments_by_date.empty? %>
+      <div class="empty">
+        <span class="empty-icon"><%= icon(:calendar, size: 22) %></span>
+        <h3>No upcoming appointments</h3>
+        <p class="muted">New bookings from patients will show up here.</p>
+      </div>
+    <% else %>
+      <% @appointments_by_date.each do |date, appointments| %>
+        <div class="day-group">
+          <div class="day-heading">
+            <span><%= day_heading(date) %></span>
+            <% if date <= Date.current + 1 %><span class="day-date"><%= date.strftime("%b %-d") %></span><% end %>
+            <span class="badge"><%= appointments.size %></span>
+          </div>
+
+          <ul class="appt-list">
+            <% appointments.each do |appt| %>
+              <li class="appt">
+                <span class="appt-time">
+                  <strong><%= clock(appt.start_time) %></strong>
+                  <small><%= ((appt.end_time - appt.start_time) / 60).round %> min</small>
+                </span>
+                <span class="avatar avatar-soft"><%= initials(appt.patient_name) %></span>
+                <span class="appt-patient">
+                  <strong><%= appt.patient_name %></strong>
+                  <a href="tel:<%= appt.patient_phone.gsub(/[^\d+]/, "") %>" class="appt-phone"><%= icon(:phone, size: 14) %><%= appt.patient_phone %></a>
+                </span>
+                <span class="appt-actions">
+                  <%= link_to "Edit", edit_doctor_appointment_path(appt), class: "btn btn-secondary btn-sm" %>
+                  <%= button_to doctor_appointment_path(appt), method: :delete, class: "btn btn-ghost-danger btn-sm",
+                                form: { class: "appt-action", onsubmit: "return confirm('Cancel #{j appt.patient_name}’s appointment on #{appt.appointment_date.strftime('%b %-d')} at #{clock(appt.start_time)}?')" } do %>
+                    Cancel
+                  <% end %>
+                </span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+
+  <div class="side-column">
+    <section class="panel">
+      <header class="panel-header">
+        <div>
+          <h2>Weekly hours</h2>
+          <p class="muted">When patients can book you</p>
+        </div>
+      </header>
+
+      <ul class="schedule">
+        <% ApplicationHelper::WEEK_ORDER.each do |weekday| %>
+          <% rules = @rules_by_weekday.fetch(weekday, []) %>
+          <li class="schedule-row <%= "is-off" if rules.empty? %> <%= "is-today" if Date.current.wday == weekday %>">
+            <span class="schedule-day"><%= Date::ABBR_DAYNAMES[weekday] %></span>
+            <span class="schedule-slots">
+              <% if rules.empty? %>
+                <span class="muted">Unavailable</span>
+              <% else %>
+                <% rules.each do |rule| %>
+                  <span class="chip">
+                    <%= clock(rule.start_time) %> – <%= clock(rule.end_time) %>
+                    <span class="chip-meta">· <%= rule.slot_duration_minutes %>m</span>
+                    <%= button_to doctor_availability_rule_path(rule), method: :delete, class: "chip-remove",
+                                  title: "Remove these hours", form: { class: "inline-form" } do %>
+                      <%= icon(:x, size: 12) %><span class="sr-only">Remove</span>
+                    <% end %>
+                  </span>
+                <% end %>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+
+      <details class="add-form" <%= "open" if @availability_rules.empty? %>>
+        <summary class="btn btn-secondary btn-sm"><%= icon(:plus, size: 14) %> Add hours</summary>
+        <%= form_with url: doctor_availability_rules_path, method: :post, local: true, class: "form form-grid" do |f| %>
+          <div class="field span-2">
+            <%= f.label :weekday, "Day" %>
+            <%= f.select :weekday, ApplicationHelper::WEEK_ORDER.map { |d| [ Date::DAYNAMES[d], d ] } %>
+          </div>
+          <div class="field">
+            <%= f.label :start_time, "From" %>
+            <%= f.time_field :start_time, value: "09:00", required: true %>
+          </div>
+          <div class="field">
+            <%= f.label :end_time, "To" %>
+            <%= f.time_field :end_time, value: "17:00", required: true %>
+          </div>
+          <div class="field span-2">
+            <%= f.label :slot_duration_minutes, "Slot length (minutes)" %>
+            <%= f.number_field :slot_duration_minutes, value: 30, min: 5, step: 5, required: true %>
+          </div>
+          <%= f.button "Save hours", class: "btn btn-primary span-2" %>
+        <% end %>
+      </details>
+    </section>
+
+    <section class="panel">
+      <header class="panel-header">
+        <div>
+          <h2>Blocked dates</h2>
+          <p class="muted">Leave, holidays and breaks</p>
+        </div>
+      </header>
+
+      <% if @blocked_slots.empty? %>
+        <p class="muted empty-inline">No upcoming blocked dates.</p>
+      <% else %>
+        <ul class="block-list">
+          <% @blocked_slots.each do |slot| %>
+            <li>
+              <span class="date-tile">
+                <small><%= slot.date.strftime("%b") %></small>
+                <strong><%= slot.date.day %></strong>
+              </span>
+              <span class="block-meta">
+                <strong><%= slot.date.strftime("%A") %></strong>
+                <span class="muted"><%= slot.whole_day? ? "Whole day" : "#{clock(slot.start_time)} – #{clock(slot.end_time)}" %></span>
+              </span>
+              <%= button_to doctor_blocked_slot_path(slot), method: :delete, class: "icon-button icon-button-muted",
+                            title: "Remove block", form: { class: "inline-form" } do %>
+                <%= icon(:x, size: 16) %><span class="sr-only">Remove</span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <details class="add-form">
+        <summary class="btn btn-secondary btn-sm"><%= icon(:plus, size: 14) %> Block a date</summary>
+        <%= form_with url: doctor_blocked_slots_path, method: :post, local: true, class: "form form-grid" do |f| %>
+          <div class="field span-2">
+            <%= f.label :date %>
+            <%= f.date_field :date, min: Date.current, required: true %>
+          </div>
+          <div class="field">
+            <%= f.label :start_time, "From" %>
+            <%= f.time_field :start_time %>
+          </div>
+          <div class="field">
+            <%= f.label :end_time, "To" %>
+            <%= f.time_field :end_time %>
+          </div>
+          <p class="hint span-2">Leave times empty to block the whole day.</p>
+          <%= f.button "Block date", class: "btn btn-primary span-2" %>
+        <% end %>
+      </details>
+    </section>
+  </div>
+</div>

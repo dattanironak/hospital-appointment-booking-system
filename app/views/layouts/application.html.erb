@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for?(:title) ? "#{yield(:title)} · " : "" %><%= clinic_name %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag "application" %>
+  </head>
+  <body>
+    <header class="appbar">
+      <div class="appbar-inner">
+        <%= link_to (logged_in? && current_user.admin? ? admin_root_path : root_path), class: "brand" do %>
+          <span class="brand-mark"><%= icon(:logo, size: 16) %></span>
+          <span class="brand-name"><%= clinic_name %></span>
+        <% end %>
+
+        <% if logged_in? %>
+          <nav class="nav">
+            <% if current_user.admin? %>
+              <%= nav_link "Doctors", admin_doctors_path %>
+              <%= nav_link "Appointments", admin_appointments_path %>
+            <% else %>
+              <%= nav_link "Dashboard", doctor_root_path %>
+              <%= nav_link "Calendar", doctor_calendar_path %>
+            <% end %>
+          </nav>
+
+          <div class="user-menu">
+            <span class="avatar"><%= initials(current_user.name) %></span>
+            <span class="user-meta">
+              <span class="user-name"><%= current_user.doctor? ? doctor_name(current_user) : current_user.name %></span>
+              <span class="user-role"><%= current_user.doctor? ? (current_user.specialty.presence || "Doctor") : "Administrator" %></span>
+            </span>
+            <%= button_to session_path, method: :delete, class: "icon-button", title: "Sign out", form: { class: "signout" } do %>
+              <%= icon(:logout) %><span class="sr-only">Sign out</span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </header>
+
+    <main class="container">
+      <% if notice %><div class="flash notice" role="status"><%= icon(:check) %><span><%= notice %></span></div><% end %>
+      <% if alert %><div class="flash alert" role="alert"><%= icon(:ban) %><span><%= alert %></span></div><% end %>
+
+      <%= yield %>
+    </main>
+
+    <footer class="site-footer">
+      <span>&copy; <%= Date.current.year %> <%= clinic_name %></span>
+      <span>Staff portal</span>
+    </footer>
+  </body>
+</html>

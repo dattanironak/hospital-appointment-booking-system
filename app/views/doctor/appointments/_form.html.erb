@@ -1,0 +1,55 @@
+<%# locals: (date_picker_url:, submit_label:, back_path:) %>
+<div class="card form-card">
+  <% if @appointment.errors.any? %>
+    <ul class="error-list">
+      <% @appointment.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+    </ul>
+  <% end %>
+
+  <%# Changing the date reloads the page so the open slots for that day can be listed. %>
+  <%= form_with url: date_picker_url, method: :get, local: true, class: "form date-picker-form" do |f| %>
+    <div class="field">
+      <%= f.label :date, "Date" %>
+      <div class="inline-fields">
+        <%= f.date_field :date, value: @date.iso8601, required: true, onchange: "this.form.requestSubmit()" %>
+        <%= f.button "Show slots", class: "btn btn-secondary", name: nil %>
+      </div>
+    </div>
+  <% end %>
+
+  <%= form_with model: [ :doctor, @appointment ], local: true, class: "form" do |f| %>
+    <%= f.hidden_field :appointment_date, value: @date.iso8601 %>
+
+    <fieldset class="field slot-field">
+      <legend>Time</legend>
+      <% if @slots.empty? %>
+        <p class="muted">No open slots on <%= @date.strftime("%b %-d") %>. Pick another date.</p>
+      <% else %>
+        <% chosen = params.dig(:appointment, :start_time) || params[:start_time] %>
+        <div class="slot-picker">
+          <% @slots.each do |slot| %>
+            <% value = slot.start_time.strftime("%H:%M") %>
+            <label class="slot-option">
+              <%= radio_button_tag "appointment[start_time]", value, chosen ? chosen == value : current_slot?(slot), required: true %>
+              <span><%= clock(slot.start_time) %><% if current_slot?(slot) %><small>current</small><% end %></span>
+            </label>
+          <% end %>
+        </div>
+      <% end %>
+    </fieldset>
+
+    <div class="field">
+      <%= f.label :patient_name, "Patient name" %>
+      <%= f.text_field :patient_name, required: true, autofocus: @appointment.new_record? %>
+    </div>
+    <div class="field">
+      <%= f.label :patient_phone, "Patient phone" %>
+      <%= f.text_field :patient_phone, required: true, placeholder: ("+15550001111" if @appointment.new_record?) %>
+    </div>
+
+    <div class="form-actions">
+      <%= f.button submit_label, class: "btn btn-primary", disabled: @slots.empty? %>
+      <%= link_to "Back", back_path, class: "btn btn-secondary" %>
+    </div>
+  <% end %>
+</div>

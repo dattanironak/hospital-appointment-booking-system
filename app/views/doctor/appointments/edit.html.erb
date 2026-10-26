@@ -1,0 +1,15 @@
+<% content_for :title, "Edit appointment" %>
+<% back_path = doctor_calendar_path(date: @appointment.appointment_date_in_database.iso8601) %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow"><%= link_to "← Calendar", back_path %></p>
+    <h1>Edit appointment</h1>
+    <p class="muted">
+      Currently <strong><%= @appointment.appointment_date_in_database.strftime("%A, %b %-d") %></strong>
+      at <strong><%= clock(@appointment.start_time_in_database) %></strong>
+    </p>
+  </div>
+</div>
+
+<%= render "form", date_picker_url: edit_doctor_appointment_path(@appointment), submit_label: "Save changes", back_path: back_path %>

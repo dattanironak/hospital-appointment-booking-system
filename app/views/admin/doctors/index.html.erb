@@ -1,0 +1,38 @@
+<% content_for :title, "Doctors" %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow">Administration</p>
+    <h1>Doctors</h1>
+    <p class="muted"><%= pluralize(@doctors.size, "doctor account") %></p>
+  </div>
+  <%= link_to new_admin_doctor_path, class: "btn btn-primary" do %><%= icon(:plus, size: 16) %> Add doctor<% end %>
+</div>
+
+<div class="panel table-panel">
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Doctor</th><th>Email</th><th>Specialty</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% @doctors.each do |doctor| %>
+          <tr>
+            <td><span class="cell-person"><span class="avatar avatar-soft"><%= initials(doctor.name) %></span><%= doctor_name(doctor) %></span></td>
+            <td class="muted"><%= doctor.email %></td>
+            <td><%= doctor.specialty.presence || content_tag(:span, "—", class: "muted") %></td>
+            <td>
+              <% if doctor.active? %>
+                <span class="status status-active">Active</span>
+              <% else %>
+                <span class="status status-inactive">Deactivated</span>
+              <% end %>
+            </td>
+            <td class="cell-actions"><%= link_to "Edit", edit_admin_doctor_path(doctor), class: "btn btn-secondary btn-sm" %></td>
+          </tr>
+        <% end %>
+        <% if @doctors.empty? %>
+          <tr><td colspan="5" class="empty-row">No doctors yet. Add your first doctor to start taking bookings.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+<% content_for :title, "New appointment" %>
+<% back_path = doctor_calendar_path(date: @date.iso8601) %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow"><%= link_to "← Calendar", back_path %></p>
+    <h1>New appointment</h1>
+    <p class="muted">Book a patient into an open slot on <strong><%= @date.strftime("%A, %b %-d") %></strong>.</p>
+  </div>
+</div>
+
+<%= render "form", date_picker_url: new_doctor_appointment_path, submit_label: "Book appointment", back_path: back_path %>

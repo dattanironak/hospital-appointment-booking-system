@@ -1,0 +1,29 @@
+<% content_for :title, "Edit doctor" %>
+
+<div class="page-header">
+  <div>
+    <p class="eyebrow"><%= link_to "Doctors", admin_doctors_path %></p>
+    <h1>Edit <%= doctor_name(@doctor) %></h1>
+  </div>
+</div>
+
+<div class="card form-card">
+  <% if @doctor.errors.any? %>
+    <ul class="error-list">
+      <% @doctor.errors.full_messages.each { |m| %><li><%= m %></li><% } %>
+    </ul>
+  <% end %>
+
+  <%= form_with model: @doctor, url: admin_doctor_path(@doctor), method: :patch, local: true, class: "form" do |f| %>
+    <div class="field"><%= f.label :name, "Full name" %><%= f.text_field :name, required: true %></div>
+    <div class="field"><label>Email</label><div class="readonly-value"><%= @doctor.email %></div></div>
+    <div class="field"><%= f.label :specialty %><%= f.text_field :specialty %></div>
+    <label class="checkbox"><%= f.check_box :active %> Account active</label>
+    <div class="field">
+      <%= f.label :password, "Reset password" %>
+      <%= f.password_field :password, autocomplete: "new-password" %>
+      <span class="hint">Leave blank to keep the current password.</span>
+    </div>
+    <div><%= f.button "Save changes", class: "btn btn-primary" %> <%= link_to "Cancel", admin_doctors_path, class: "btn btn-secondary" %></div>
+  <% end %>
+</div>
