@@ -47,3 +47,8 @@ group :development, :test do
   gem "rspec-rails"
   gem "factory_bot_rails"
 end
+
+group :development do
+  # Load local secrets (e.g. Twilio credentials) from .env
+  gem "dotenv"
+end
